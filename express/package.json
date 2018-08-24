@@ -1,0 +1,35 @@
+{
+    "name": "@teamhive/honeyflow-express-client",
+    "version": "0.0.1",
+    "description": "Express client module to communicate with the HoneyFlow API",
+    "main": "index.js",
+    "typings": "index.d.ts",
+    "author": "TeamHive",
+    "contributors": [
+        "John Pinkster <jpinkster>",
+        "Tyler Vander Maas <tvmaasjazz>"
+    ],
+    "scripts": {
+        "build": "rm -rf dist && tsc -d",
+        "prepublishOnly": "tsc",
+        "prepack": "tsc",
+        "postpack": "rm *.js && rm *.d.ts && rm -Rf interfaces",
+        "postpublish": "git push --tag"
+    },
+    "homepage": "https://github.com/TeamHive/honeyflow-client#readme",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/TeamHive/honeyflow-client.git"
+    },
+    "bugs": {
+        "url": "https://github.com/TeamMaestro/honeyflow-client/issues"
+    },
+    "dependencies": {
+        "request": "^2.87.0",
+        "request-promise-native": "^1.0.5"
+    },
+    "devDependencies": {
+        "@types/request-promise-native": "^1.0.15"
+    }
+}
