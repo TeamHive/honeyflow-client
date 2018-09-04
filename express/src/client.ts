@@ -15,6 +15,7 @@ const DEFAULT_IGNORED_STATUSES = [401, 403, 405];
 const API_ENDPOINTS = {
     TRACKING: '/api/v1/tracking'
 };
+const AUTO_FILTERED_HEADERS = ['Authorization', 'authorization', 'Cookie', 'cookie', 'Cookie2', 'cookie2'];
 
 
 export class HoneyFlowClient {
@@ -109,9 +110,11 @@ export class HoneyFlowClient {
 
     private filterRequestHeaders(headers: any): any {
         const filteredHeaders = { ...headers };
-        // change value of authorization (loop through if we have list of ones to always filter)
-        filteredHeaders['Authorization'] ? filteredHeaders['Authorization'] = '[Filtered]' : null;
-        filteredHeaders['authorization'] ? filteredHeaders['authorization'] = '[Filtered]' : null;
+
+        // loop through auto filtered headers and filter if they exist
+        for (const header of AUTO_FILTERED_HEADERS) {
+            filteredHeaders[header] ? filteredHeaders[header] = '[Filtered]' : null;
+        }
 
         // check ignoreHeaders
         // loop throughbignore headers, if regex then
