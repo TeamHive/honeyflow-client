@@ -1,6 +1,6 @@
 {
     "name": "@teamhive/honeyflow-express-client",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Express client module to communicate with the HoneyFlow API",
     "main": "index.js",
     "typings": "index.d.ts",
