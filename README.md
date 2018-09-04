@@ -23,3 +23,15 @@ app.use(new HoneyFlowClient({
 ... The rest of your express logic
 ```
 
+### Options
+**ignoreEndpoints**: Takes an array of route strings, IgnoreEndpointItems, or a combination.
+```
+// route string
+['/users', '/users/:identity']
+
+// IgnoreEndpointItem, to specify methods to ignore for the given route
+[{
+    route: '/users/:identity',
+    methods: ['GET', 'PUT']
+}]
+```
