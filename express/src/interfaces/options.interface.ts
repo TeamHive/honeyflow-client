@@ -1,10 +1,12 @@
+import { IgnoreEndpointsItem } from "./ignore-endpoints-item.interface";
+
 export interface HoneyFlowOptions {
     apiKey: string;
     host?: string;
     release?: string;
     environment?: string;
     sampleRate?: number;
-    ignoreEndpoints?: (string | RegExp)[];
+    ignoreEndpoints?: (string | IgnoreEndpointsItem)[];
     ignoreHeaders?: (string | RegExp)[];
     sanitizeKeys?: (string | RegExp)[]; // for request body
     ignoreHttpResponseStatuses?: number[];

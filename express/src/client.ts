@@ -4,7 +4,9 @@ import {
     HoneyFlowOptions,
     ExpressMiddleware,
     HoneyFlowResponseTimer,
-    HoneyFlowRequest
+    HoneyFlowRequest,
+    IgnoreEndpointsItem,
+    HttpMethod
 } from './interfaces';
 
 
@@ -23,7 +25,7 @@ export class HoneyFlowClient {
     release: string;
     environment: string;
     sampleRate: number;
-    ignoreEndpoints: (string | RegExp)[];
+    ignoreEndpoints: (string | IgnoreEndpointsItem)[];
     ignoreHeaders: (string | RegExp)[];
     sanitizeKeys: (string | RegExp)[];
     ignoreHttpResponseStatuses: number[];
@@ -40,30 +42,29 @@ export class HoneyFlowClient {
         this.apiKey = options.apiKey;
         this.release = options.release;
         this.environment = options.environment;
-        this.sampleRate = options.sampleRate;
-        this.ignoreEndpoints = options.ignoreEndpoints;
-        this.ignoreHeaders = options.ignoreHeaders;
+        this.sampleRate = (options.sampleRate > 0 && options.sampleRate < 1) ? options.sampleRate : 1;
+        this.ignoreEndpoints = options.ignoreEndpoints || [];
+        this.ignoreHeaders = options.ignoreHeaders || [];
         this.shouldSendCallback = options.shouldSendCallback;
     }
 
     monitor(): ExpressMiddleware {
         return (req: any, res: any, next: any): void => {
-            // check if this request is to an endpoint that we want to collect data on...
+            if (this.isValidEndpoint(req) && Math.random() < this.sampleRate) {
+                const startedAt = new Date();
+                res.once('finish', async () => {
+                    const endedAt = new Date();
+                    const duration = endedAt.getTime() - startedAt.getTime();
 
-            const startedAt = new Date();
-            res.once('finish', async () => {
-                const endedAt = new Date();
-                const duration = endedAt.getTime() - startedAt.getTime();
-
-                // was this a successful request - if error even send?
-                if (this.isValidStatusCode(res.statusCode)) {
-                    await this.send(req, res.statusCode, {
-                        startedAt,
-                        endedAt,
-                        duration
-                    });
-                }
-            });
+                    if (this.isValidStatusCode(res.statusCode)) {
+                        await this.send(req, res.statusCode, {
+                            startedAt,
+                            endedAt,
+                            duration
+                        });
+                    }
+                });
+            }
             next();
         };
     }
@@ -75,14 +76,9 @@ export class HoneyFlowClient {
     ): Promise<void> {
         const userAgent = req.headers ? req.headers['user-agent'] : undefined;
         const requestRoute = this.getRoute(req);
-
-        // filter req headers
         const requestHeaders = this.filterRequestHeaders(req.headers);
-
-        // filter req body
         const requestBody = this.filterRequestBody(req.body);
 
-        // create an object to send to send to API - EndpointMonitorRequest
         const requestOptions: request.OptionsWithUrl = {
             method: 'POST',
             url: `${this.apiBaseURL}${API_ENDPOINTS.TRACKING}`,
@@ -103,7 +99,6 @@ export class HoneyFlowClient {
             json: true
         };
 
-        // send request to api
         try {
             await request.post(requestOptions);
         }
@@ -141,6 +136,28 @@ export class HoneyFlowClient {
 
     private isValidStatusCode(statusCode: number): boolean {
         return this.ignoreHttpResponseStatuses.indexOf(statusCode) === -1;
+    }
+
+    private isValidEndpoint(req: any): boolean {
+        const endpointMethod: HttpMethod = req.method;
+        const endpointRoute = this.getRoute(req);
+
+        for (const item of this.ignoreEndpoints) {
+            // if string, check if incoming route includes it
+            if (typeof item === 'string') {
+                if (endpointRoute.indexOf(item) !== -1) {
+                    return false;
+                }
+            }
+            else {
+                // if object, check route and also that the method matches
+                if (endpointRoute.indexOf(item.route) !== -1 && item.methods.some(method => method === endpointMethod)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private defaultErrorHandler(error): void {
