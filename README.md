@@ -16,9 +16,10 @@ import * as express from 'express';
 import { HoneyFlowClient } from '@teamhive/honeyflow-express-client';
 
 const app: express.Express = express();
-app.use(new HoneyFlowClient({
+HoneyFlowClient.config({
     apiKey: 'APIKEY'
-}).monitor());
+});
+app.use(HoneyFlowClient.monitorEndpoints());
 
 ... The rest of your express logic
 ```
@@ -34,4 +35,15 @@ app.use(new HoneyFlowClient({
     route: '/users/:identity',
     methods: ['GET', 'PUT']
 }]
+```
+
+### Track Operations Decorator
+If you want to track operation time and success of non-endpoint functions in your application you can use the `TrackOperation` decorator and simply pass in the name you want to register the operation as.
+
+```
+// fetch in the user service
+@TrackOperation('UserService.fetch')
+async fetch(identity: string) {
+    return await this.userRepository.findOne({ where: identity });
+}
 ```

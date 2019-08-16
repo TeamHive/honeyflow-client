@@ -47,7 +47,7 @@ export class HoneyFlowClient {
         this.shouldSendCallback = options.shouldSendCallback;
     }
 
-    static monitor(): ExpressMiddleware {
+    static monitorEndpoints(): ExpressMiddleware {
         return (req: any, res: any, next: any) => {
             if (this.isValidEndpoint(req) && Math.random() < this.sampleRate) {
                 const startedAt = new Date();
