@@ -12,7 +12,7 @@
     "scripts": {
         "build": "rm -rf dist && tsc -d",
         "prepack": "tsc",
-        "postpack": "rm *.js && rm *.d.ts && rm -Rf interfaces",
+        "postpack": "rm *.js && rm *.d.ts && rm -Rf classes decorators interfaces",
         "postpublish": "git push --tag"
     },
     "homepage": "https://github.com/TeamHive/honeyflow-client#readme",
@@ -29,6 +29,7 @@
         "request-promise-native": "^1.0.5"
     },
     "devDependencies": {
+        "@types/node": "^12.6.1",
         "@types/request-promise-native": "^1.0.15"
     }
 }

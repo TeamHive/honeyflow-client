@@ -11,7 +11,7 @@ export interface HoneyFlowOptions {
     sanitizeKeys?: (string | RegExp)[]; // for request body
     ignoreHttpResponseStatuses?: number[];
     customErrorHandler?: (error) => void;
-    shouldSendCallback?: Function; // be more specific of what it takes
+    shouldSendCallback?: (req: any) => boolean;
 }
 
 // whiteListEndpoints
