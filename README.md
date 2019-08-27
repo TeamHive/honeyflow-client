@@ -38,12 +38,18 @@ app.use(HoneyFlowClient.monitorEndpoints());
 ```
 
 ### Track Operations Decorator
-If you want to track operation time and success of non-endpoint functions in your application you can use the `TrackOperation` decorator and simply pass in the name you want to register the operation as.
+If you want to track operation time and success of non-endpoint functions in your application you can use the `TrackOperation` decorator and simply pass in the name you want to register the operation as. By default this assumes the function you are decorating is async. If you are decorating a synchrous function pass that into the options parameter.
 
 ```
 // fetch in the user service
 @TrackOperation('UserService.fetch')
 async fetch(identity: string) {
     return await this.userRepository.findOne({ where: identity });
+}
+
+// if sync, use options
+@TrackOperation('SyncService.compare', { isSynchronous: true })
+compare(obj1: any, obj2: any) {
+    ...
 }
 ```
