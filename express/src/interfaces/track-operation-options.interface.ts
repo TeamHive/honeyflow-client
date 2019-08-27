@@ -1,3 +1,4 @@
 export interface TrackOperationOptions {
-    isSynchronous: boolean;
+    isSynchronous?: boolean;
+    sampleRate?: number;
 }
