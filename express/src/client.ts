@@ -12,7 +12,7 @@ import {
 const DEFAULT_HOST = 'https://honeyflow.teamhive.com';
 const DEFAULT_IGNORED_STATUSES = [401, 403, 405];
 const API_ENDPOINTS = {
-    TRACKING_INSTANCE: '/api/v1/tracking-instance'
+    TRACKING: '/api/v1/tracking'
 };
 const AUTO_FILTERED_HEADERS = ['Authorization', 'authorization', 'Cookie', 'cookie', 'Cookie2', 'cookie2'];
 
@@ -94,7 +94,7 @@ export class HoneyFlowClient {
     static async send(data: HoneyFlowRequest) {
         const requestOptions: request.OptionsWithUrl = {
             method: 'POST',
-            url: `${this.apiBaseURL}${API_ENDPOINTS.TRACKING_INSTANCE}`,
+            url: `${this.apiBaseURL}${API_ENDPOINTS.TRACKING}`,
             headers: {
                 'Authorization': `Bearer ${this.apiKey}`
             },
