@@ -1,13 +1,17 @@
+import { TrackingInstanceType } from "./tracking-instance.type";
+
 export interface HoneyFlowRequest {
+    type: TrackingInstanceType;
     startedAt: Date;
     endedAt: Date;
     duration: number;
-    release: string;
-    environment: string;
-    userAgent: string;
-    requestMethod: string;
-    requestRoute: string;
-    requestHeaders: any;
-    requestBody: any;
+    name?: string;
+    userAgent?: string;
+    requestMethod?: string;
+    requestRoute?: string;
+    requestHeaders?: any;
+    requestBody?: any;
     responseStatusCode: number;
+    environment?: string;
+    release?: string;
 }

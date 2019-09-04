@@ -9,7 +9,6 @@ import {
     HttpMethod
 } from './interfaces';
 
-
 const DEFAULT_HOST = 'https://honeyflow.teamhive.com';
 const DEFAULT_IGNORED_STATUSES = [401, 403, 405];
 const API_ENDPOINTS = {
@@ -19,25 +18,24 @@ const AUTO_FILTERED_HEADERS = ['Authorization', 'authorization', 'Cookie', 'cook
 
 
 export class HoneyFlowClient {
-    apiBaseURL: string;
-    errorHandler: (error) => void;
+    static apiBaseURL: string;
+    static errorHandler: (error: any) => void;
 
-    apiKey: string;
-    release: string;
-    environment: string;
-    sampleRate: number;
-    ignoreEndpoints: (string | IgnoreEndpointsItem)[];
-    ignoreHeaders: (string | RegExp)[];
-    sanitizeKeys: (string | RegExp)[];
-    ignoreHttpResponseStatuses: number[];
-    customErrorHandler: (error) => void;
-    shouldSendCallback: Function;
+    static apiKey: string;
+    static release: string;
+    static environment: string;
+    static sampleRate: number;
+    static ignoreEndpoints: (string | IgnoreEndpointsItem)[];
+    static ignoreHeaders: (string | RegExp)[];
+    static sanitizeKeys: (string | RegExp)[];
+    static ignoreHttpResponseStatuses: number[];
+    static customErrorHandler: (error: any) => void;
+    static shouldSendCallback: (req: any) => boolean;
 
-    constructor(options: HoneyFlowOptions) {
+    static config(options: HoneyFlowOptions) {
         // defaults
         this.ignoreHttpResponseStatuses = options.ignoreHttpResponseStatuses || DEFAULT_IGNORED_STATUSES;
         this.errorHandler = options.customErrorHandler || this.defaultErrorHandler;
-
         this.apiBaseURL = options.host || DEFAULT_HOST;
 
         this.apiKey = options.apiKey;
@@ -49,16 +47,16 @@ export class HoneyFlowClient {
         this.shouldSendCallback = options.shouldSendCallback;
     }
 
-    monitor(): ExpressMiddleware {
-        return (req: any, res: any, next: any): void => {
+    static monitorEndpoints(): ExpressMiddleware {
+        return (req: any, res: any, next: any) => {
             if (this.isValidEndpoint(req) && Math.random() < this.sampleRate) {
                 const startedAt = new Date();
-                res.once('finish', async () => {
+                res.once('finish', () => {
                     const endedAt = new Date();
                     const duration = endedAt.getTime() - startedAt.getTime();
 
                     if (this.isValidStatusCode(res.statusCode)) {
-                        await this.send(req, res.statusCode, {
+                        this.sendEndpointTracking(req, res.statusCode, {
                             startedAt,
                             endedAt,
                             duration
@@ -70,16 +68,30 @@ export class HoneyFlowClient {
         };
     }
 
-    private async send(
+    private static sendEndpointTracking(
         req: any,
         responseStatusCode: number,
         responseTimer: HoneyFlowResponseTimer
-    ): Promise<void> {
+    ) {
         const userAgent = req.headers ? req.headers['user-agent'] : undefined;
         const requestRoute = this.getRoute(req);
         const requestHeaders = this.filterRequestHeaders(req.headers);
         const requestBody = this.filterRequestBody(req.body);
 
+
+        this.send({
+            type: 'ENDPOINT',
+            ...responseTimer,
+            userAgent,
+            requestMethod: req.method,
+            requestRoute,
+            requestHeaders,
+            requestBody,
+            responseStatusCode
+        });
+    }
+
+    static async send(data: HoneyFlowRequest) {
         const requestOptions: request.OptionsWithUrl = {
             method: 'POST',
             url: `${this.apiBaseURL}${API_ENDPOINTS.TRACKING}`,
@@ -87,15 +99,9 @@ export class HoneyFlowClient {
                 'Authorization': `Bearer ${this.apiKey}`
             },
             body: {
-                ...responseTimer,
+                ...data,
                 release: this.release,
-                environment: this.environment,
-                userAgent,
-                requestMethod: req.method,
-                requestRoute,
-                requestHeaders,
-                requestBody,
-                responseStatusCode
+                environment: this.environment
             } as HoneyFlowRequest,
             json: true
         };
@@ -108,7 +114,7 @@ export class HoneyFlowClient {
         }
     }
 
-    private filterRequestHeaders(headers: any): any {
+    private static filterRequestHeaders(headers: any) {
         const filteredHeaders = { ...headers };
 
         // loop through auto filtered headers and filter if they exist
@@ -119,10 +125,10 @@ export class HoneyFlowClient {
         // check ignoreHeaders
         // loop throughbignore headers, if regex then
 
-        return filteredHeaders;
+        return JSON.stringify(filteredHeaders);
     }
 
-    private filterRequestBody(body: any): any {
+    private static filterRequestBody(body: any) {
         const filteredBody = { ...body };
 
         // filter password
@@ -130,18 +136,18 @@ export class HoneyFlowClient {
 
         // check sanitizeKeys and delete anything that matches
 
-        return filteredBody;
+        return JSON.stringify(filteredBody);
     }
 
-    private getRoute(req: any): string {
+    private static getRoute(req: any): string {
         return (req.route && req.route.path) ? req.route.path : req.path;
     }
 
-    private isValidStatusCode(statusCode: number): boolean {
+    private static isValidStatusCode(statusCode: number) {
         return this.ignoreHttpResponseStatuses.indexOf(statusCode) === -1;
     }
 
-    private isValidEndpoint(req: any): boolean {
+    private static isValidEndpoint(req: any) {
         const endpointMethod: HttpMethod = req.method;
         const endpointRoute = this.getRoute(req);
 
@@ -163,7 +169,7 @@ export class HoneyFlowClient {
         return true;
     }
 
-    private defaultErrorHandler(error): void {
+    private static defaultErrorHandler(error: any) {
         console.log(`Error with request to Honeyflow: ${JSON.stringify(error.error)}`);
     }
 }
